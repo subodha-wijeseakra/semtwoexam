@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Uva Wellassa University</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-a: #0a0a0b;
+      --bg-b: #0e0e11;
+      --card: rgba(255,255,255,0.05);
+      --card-strong: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
+      --text: #e7e7ea;
+      --muted: #b7b7c0;
+      --accent: #7dd3fc;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --dim: #a1a1aa;
+      --shadow: rgba(0,0,0,0.45);
+    }
+    body.light {
+      --bg-a: #f9fafb;
+      --bg-b: #f3f4f6;
+      --card: rgba(0,0,0,0.03);
+      --card-strong: rgba(0,0,0,0.06);
+      --border: rgba(0,0,0,0.12);
+      --text: #111827;
+      --muted: #4b5563;
+      --accent: #0284c7;
+      --ok: #059669;
+      --warn: #d97706;
+      --dim: #6b7280;
+      --shadow: rgba(0,0,0,0.1);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, #111827 10%, transparent),
+                  radial-gradient(900px 600px at 90% 10%, #0f172a 10%, transparent),
+                  linear-gradient(180deg, var(--bg-a), var(--bg-b));
+      background-attachment: fixed;
+      transition: background 0.4s, color 0.4s;
+    }
+    body.light {
+      background: linear-gradient(180deg, var(--bg-a), var(--bg-b));
+    }
+    .container{ max-width:1000px; margin-inline:auto; padding:24px; }
+
+    .header{ display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+    .title{ font-size: clamp(24px, 3vw, 36px); font-weight: 700; letter-spacing: -0.02em }
+    .subtitle{ color: var(--muted); font-size: 14px }
+
+    .theme-toggle {
+      align-self: flex-end;
+      padding: 6px 14px;
+      font-size: 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      transition: all 0.3s;
+    }
+    .theme-toggle:hover {
+      background: var(--card-strong);
+    }
+
+    .panel{
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 20px 50px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+      overflow:hidden;
+      transition: all 0.4s;
+    }
+
+    .table-wrap{ display:none }
+    table{ width:100%; border-collapse:separate; border-spacing:0 }
+    thead th{ text-align:left; font-weight:600; font-size:13px; color:var(--muted); padding:14px 18px; background: var(--card-strong); }
+    tbody tr{ transition:background .2s ease }
+    tbody tr + tr td{ border-top:1px solid var(--border) }
+    tbody tr:hover{ background: rgba(255,255,255,0.04) }
+    td{ padding:16px 18px; font-size:15px }
+    .idx{ color: var(--dim) }
+    .subject{ font-weight:600 }
+    .date{ color:#d6d6db }
+
+    .chip{ display:inline-flex; align-items:center; padding:6px 12px; gap:8px; border-radius:999px; border:1px solid var(--border); background: var(--card); font-size:13px }
+    .chip.ok{ color:#c9f5e3; border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.08) }
+    .chip.warn{ color:#fde68a; border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.08) }
+    .chip.dim{ color:#d4d4d8; border-color: rgba(113,113,122,.35); background: rgba(113,113,122,.08) }
+
+    .cards{ display:grid; grid-template-columns:1fr; gap:12px; padding:12px }
+    .card{ border-top:1px solid rgba(255,255,255,0.06); border-left:1px solid rgba(255,255,255,0.06); background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius:16px; padding:14px; box-shadow: 0 10px 30px var(--shadow) }
+    .row{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-top:8px }
+    .badge{ font-size:12px; opacity:.85 }
+
+    .muted{ color: var(--muted) }
+    .pill{ display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:12px; padding:6px 10px; border-radius:999px; background: rgba(125,211,252,0.12); border:1px solid rgba(125,211,252,0.35); color:#c8f3ff }
+    .grid-meta{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:6px; margin-top:8px; font-size:13px }
+
+    @media (min-width: 720px){
+      .table-wrap{ display:block }
+      .cards{ display:none }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <button id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
+      <div class="title">Exam Calendar</div>
+      <div class="subtitle" id="todayLabel">Today: —</div>
+    </header>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Subject</th>
+              <th>Date</th>
+              <th>Days Left</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+  </div>
+
+  <script>
+    const EXAMS = [
+      { subject: "Project Managemenet", y: 2025, m: 9, d: 2 },
+      { subject: "Explorative English",     y: 2025, m: 9, d: 8 },
+      { subject: "Statistical Methods",   y: 2025, m: 9, d: 23 },
+      { subject: "Human Computer Interaction",     y: 2025, m: 9, d: 25 },
+      { subject: "System Level Programming",         y: 2025, m: 9, d: 27  },
+      { subject: "Professional Ethics In Computing",     y: 2025, m: 9, d: 30  },
+      { subject: "Business Process Management",     y: 2025, m: 10, d: 2  },
+      { subject: "Object Oriented Analysis and Designs",   y: 2025, m: 10, d: 7  },
+    ];
+
+    function makeLocalDate(y, m, d){
+      const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
+      dt.setHours(0,0,0,0);
+      return dt;
+    }
+    function startOfDay(date){
+      const dt = new Date(date);
+      dt.setHours(0,0,0,0);
+      return dt;
+    }
+    function daysUntil(target){
+      const today = startOfDay(new Date());
+      const diffMs = target.getTime() - today.getTime();
+      return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    }
+    function fmtDate(dt){
+      return dt.toLocaleDateString(undefined, {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    function statusFor(du){
+      if (du < 0) return {label: `Done ${Math.abs(du)}d ago`, cls: 'dim'};
+      if (du === 0) return {label: 'Today', cls: 'warn'};
+      return {label: 'Upcoming', cls: 'ok'};
+    }
+    function render(){
+      const todayStr = new Date().toLocaleDateString(undefined, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      document.getElementById('todayLabel').textContent = `Today: ${todayStr}`;
+      const data = EXAMS.map(x => ({...x, date: makeLocalDate(x.y, x.m, x.d)}))
+                        .sort((a,b) => a.date - b.date);
+
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+      data.forEach((row, i) => {
+        const du = daysUntil(row.date);
+        const stat = statusFor(du);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="idx">${i+1}</td>
+          <td class="subject">${row.subject}</td>
+          <td class="date">${fmtDate(row.date)}</td>
+          <td>
+            <span class="chip ${du>0? 'ok': du===0? 'warn': 'dim'}">
+              ${du>0 ? `${du} day${du===1?'':'s'}` : du===0? 'Today' : `${Math.abs(du)} day${Math.abs(du)===1?'':'s'} ago`}
+            </span>
+          </td>
+          <td>
+            <span class="chip ${stat.cls}">${stat.label}</span>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      const cards = document.getElementById('cards');
+      cards.innerHTML = '';
+      data.forEach((row, i) => {
+        const du = daysUntil(row.date);
+        const stat = statusFor(du);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="pill">#${i+1} • ${row.subject}</div>
+          <div class="grid-meta">
+            <div><span class="muted">Date</span><br>${fmtDate(row.date)}</div>
+            <div><span class="muted">Days Left</span><br>
+              <span class="badge chip ${du>0? 'ok': du===0? 'warn': 'dim'}">
+                ${du>0 ? `${du} day${du===1?'':'s'}` : du===0? 'Today' : `${Math.abs(du)} day${Math.abs(du)===1?'':'s'} ago`}
+              </span>
+            </div>
+          </div>
+          <div class="row">
+            <span class="muted">Status</span>
+            <span class="chip ${stat.cls}">${stat.label}</span>
+          </div>`;
+        cards.appendChild(card);
+      });
+    }
+
+    render();
+
+    // Theme switcher
+    const toggleBtn = document.getElementById('themeToggle');
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      const isLight = document.body.classList.contains('light');
+      toggleBtn.textContent = isLight ? '🌞 Light Mode' : '🌙 Dark Mode';
+    });
+  </script>
+</body>
+</html>
