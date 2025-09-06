@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutor Attendance Web App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --panel-bg: #111;
+            --glass: rgba(30,30,30,0.85);
+            --border: #222;
+            --accent: #fff;
+            --accent-hover: #eaeaea;
+            --text: #fff;
+            --text-muted: #bbb;
+            --shadow: 0 4px 32px rgba(0,0,0,0.18);
+            --radius: 14px;
+            --transition: 0.18s cubic-bezier(.4,0,.2,1);
+        }
+        html, body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+        }
+        header {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .controls input[type="search"], .controls select, .controls input[type="date"] {
+            background: var(--glass);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: border var(--transition), background var(--transition);
+            box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+        }
+        .controls input[type="search"]::placeholder,
+        .controls input[type="date"]::placeholder {
+            color: var(--text-muted);
+            opacity: 1;
+        }
+        .controls input[type="search"]:focus,
+        .controls select:focus,
+        .controls input[type="date"]:focus {
+            border-color: var(--accent);
+            background: #181818;
+        }
+        .controls button {
+            background: #000;
+            color: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 1.05rem;
+            font-weight: 500;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+            transition: background var(--transition), color var(--transition), border var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .controls button:hover {
+            background: var(--accent-hover);
+            color: #000;
+            border-color: #444;
+        }
+        .student-table th, .student-table td {
+            border-bottom: 1px solid var(--border);
+        }
+        .student-table th {
+            background: #111;
+            color: var(--accent);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+        .student-table td .btn {
+            background: #000;
+            color: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 1em;
+            font-weight: 500;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+            transition: background var(--transition), color var(--transition), border var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .student-table td .btn:hover {
+            background: var(--accent-hover);
+            color: #000;
+            border-color: #444;
+        }
+        .student-table td .btn svg {
+            stroke: #fff;
+            background: #000;
+        }
+        .student-table td .btn:hover svg {
+            stroke: #000;
+            background: #fff;
+        }
+        /* Modal styles */
+        .modal-backdrop {
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal {
+            background: var(--panel-bg);
+            border-radius: var(--radius);
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 40px 36px 32px 36px;
+            min-width: 420px;
+            max-width: 98vw;
+            max-height: 95vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal h2 {
+            color: var(--accent);
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 22px;
+        }
+        .modal label {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .modal input[type="text"],
+        .modal input[type="number"],
+        .modal input[type="date"],
+        .modal textarea,
+        .modal select {
+            background: #181818;
+            color: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 1rem;
+            margin-bottom: 18px;
+            width: 100%;
+            outline: none;
+            transition: border var(--transition), background var(--transition);
+        }
+        .modal input[type="text"]:focus,
+        .modal input[type="number"]:focus,
+        .modal input[type="date"]:focus,
+        .modal textarea:focus,
+        .modal select:focus {
+            border-color: var(--accent);
+            background: #222;
+        }
+        .modal input[type="text"]::placeholder,
+        .modal input[type="number"]::placeholder,
+        .modal textarea::placeholder {
+            color: var(--text-muted);
+        }
+        .modal .modal-actions button {
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: none;
+            background: #000;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background var(--transition), color var(--transition);
+        }
+        .modal .modal-actions button:hover {
+            background: var(--accent-hover);
+            color: #000;
+        }
+        .modal .close-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        .modal .close-btn:hover {
+            color: var(--accent);
+        }
+        /* Tuned Out popup */
+        .tunedout-popup {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 28px 32px;
+            color: var(--text);
+            position: absolute;
+            z-index: 10;
+            min-width: 380px;
+            max-width: 95vw;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+        }
+        .tunedout-popup strong {
+            color: var(--accent);
+            font-size: 1.1em;
+        }
+        .tunedout-popup .detail-row {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .tunedout-popup .detail-label {
+            color: var(--text-muted);
+            min-width: 120px;
+            font-weight: 500;
+        }
+        .tunedout-popup .detail-value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .tunedout-popup .close-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            margin-top: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tunedout-popup .close-btn:hover {
+            background: var(--accent-hover);
+            color: #000;
+        }
+        @media (max-width: 700px) {
+            .modal { min-width: 98vw; padding: 18px 6vw; }
+            .tunedout-popup { min-width: 98vw; padding: 18px 6vw; }
+        }
+    </style>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-black">
+    <header class="w-full max-w-3xl mx-auto mt-8 mb-4 px-8 py-6 flex flex-col items-center gap-2">
+        <h1 class="text-3xl font-bold text-white tracking-tight">Tutor Attendance</h1>
+        <div class="date text-lg text-gray-400 tracking-wide" id="today-date"></div>
+        <div class="controls w-full flex flex-wrap justify-center gap-4 mt-4">
+            <input type="search" id="search" placeholder="Search students..." aria-label="Search students" class="w-52">
+            <select id="sort" class="w-44">
+                <option value="name">Sort by Name</option>
+                <option value="totalMinutes">Sort by Total Minutes</option>
+                <option value="daysPresent">Sort by Days Present</option>
+            </select>
+            <button id="add-student-btn"><i data-feather="user-plus" width="16" height="16"></i> Add</button>
+            <button id="export-csv-btn"><i data-feather="download" width="16" height="16"></i></button>
+            <label style="display:none;" id="import-label">
+                <input type="file" id="import-csv-input" accept=".csv" style="display:none;">
+            </label>
+            <button id="import-csv-btn"><i data-feather="upload" width="16" height="16"></i></button>
+            <button id="add-previous-btn"><i data-feather="calendar" width="16" height="16"></i></button>
+        </div>
+    </header>
+    <main>
+        <table class="student-table w-full max-w-3xl mx-auto border-collapse bg-[#111] rounded-xl border border-[#222] overflow-hidden mt-4" id="student-table" aria-label="Student Attendance Table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Notes</th>
+                    <th>Days Present</th>
+                    <th>Total Hours</th>
+                    <th>Session</th>
+                    <th>Attendance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="student-tbody">
+                <!-- Student rows injected here -->
+            </tbody>
+        </table>
+    </main>
+    <div id="modal-root"></div>
+    <script>
+        // --- Utility Functions ---
+        function uuidv4() {
+            return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+        function formatMinutes(mins) {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h}:${m.toString().padStart(2,'0')}`;
+        }
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        function todayISO() {
+            const d = new Date();
+            return d.toISOString().slice(0,10);
+        }
+        function escapeCSV(val) {
+            if (typeof val !== 'string') return val;
+            if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                return `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+        }
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const header = lines[0].split(',');
+            return lines.slice(1).map(line => {
+                const values = [];
+                let i = 0, inQuotes = false, value = '';
+                for (let c of line) {
+                    if (c === '"' && !inQuotes) { inQuotes = true; continue; }
+                    if (c === '"' && inQuotes) { inQuotes = false; continue; }
+                    if (c === ',' && !inQuotes) { values.push(value); value = ''; continue; }
+                    value += c;
+                }
+                values.push(value);
+                const obj = {};
+                header.forEach((h, idx) => obj[h] = values[idx]);
+                return obj;
+            });
+        }
+        function toCSV(data, header) {
+            return header.join(',') + '\n' + data.map(row =>
+                header.map(h => escapeCSV(row[h] ?? '')).join(',')
+            ).join('\n');
+        }
+        // --- Data Model ---
+        const CSV_HEADER = ['id','name','phone','notes','totalMinutes','daysPresent','lastMarkedDate'];
+        let students = [];
+        // --- LocalStorage ---
+        function loadStudents() {
+            const raw = localStorage.getItem('attendance_students');
+            if (!raw) {
+                students = [];
+                saveStudents();
+            } else {
+                try {
+                    students = JSON.parse(raw);
+                } catch {
+                    students = [];
+                }
+            }
+        }
+        function saveStudents() {
+            localStorage.setItem('attendance_students', JSON.stringify(students));
+        }
+        // --- UI State ---
+        let searchTerm = '';
+        let sortBy = 'name';
+        let timerIntervals = {};
+        let tunedOutPopupId = null;
+        // --- DOM Elements ---
+        const todayDateEl = document.getElementById('today-date');
+        const studentTbody = document.getElementById('student-tbody');
+        const addStudentBtn = document.getElementById('add-student-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+        const importCsvBtn = document.getElementById('import-csv-btn');
+        const importCsvInput = document.getElementById('import-csv-input');
+        const importLabel = document.getElementById('import-label');
+        const searchInput = document.getElementById('search');
+        const sortSelect = document.getElementById('sort');
+        const modalRoot = document.getElementById('modal-root');
+        const addPreviousBtn = document.getElementById('add-previous-btn');
+        // --- Render Functions ---
+        function renderDate() {
+            const d = new Date();
+            todayDateEl.textContent = d.toLocaleDateString(undefined, {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        function renderStudents() {
+            let filtered = students.filter(s =>
+                s.name.toLowerCase().includes(searchTerm) ||
+                s.phone.toLowerCase().includes(searchTerm) ||
+                (s.notes ?? '').toLowerCase().includes(searchTerm)
+            );
+            filtered.sort((a,b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'totalMinutes') return (b.totalMinutes||0)-(a.totalMinutes||0);
+                if (sortBy === 'daysPresent') return (b.daysPresent||0)-(a.daysPresent||0);
+                return 0;
+            });
+            studentTbody.innerHTML = '';
+            filtered.forEach(student => {
+                const tr = document.createElement('tr');
+                function td(label, html) {
+                    const td = document.createElement('td');
+                    td.setAttribute('data-label', label);
+                    td.innerHTML = html;
+                    return td;
+                }
+                tr.appendChild(td('Name', `<strong>${student.name}</strong>`));
+                tr.appendChild(td('Phone', `<span>${student.phone}</span>`));
+                tr.appendChild(td('Notes', `<span>${student.notes ?? ''}</span>`));
+                tr.appendChild(td('Days Present', `<span>${student.daysPresent ?? 0}</span>`));
+                tr.appendChild(td('Total Hours', `<span>${formatMinutes(student.totalMinutes ?? 0)}</span>`));
+                let sessionHtml = '';
+                if (student.session?.startedAt) {
+                    sessionHtml += `<span class="timer" id="timer-${student.id}">${getSessionTimer(student)}</span>`;
+                    sessionHtml += `<button class="btn" data-action="end" data-id="${student.id}" aria-label="End session"><i data-feather="stop-circle" width="16" height="16"></i></button>`;
+                } else {
+                    sessionHtml += `<button class="btn" data-action="start" data-id="${student.id}" aria-label="Start session"><i data-feather="play-circle" width="16" height="16"></i></button>`;
+                }
+                tr.appendChild(td('Session', sessionHtml));
+                let attendanceHtml = '';
+                attendanceHtml += `<button class="btn" data-action="mark" data-id="${student.id}" aria-label="Mark attendance"><i data-feather="check-circle" width="16" height="16"></i></button>`;
+                tr.appendChild(td('Attendance', attendanceHtml));
+                let actionsHtml = '';
+                actionsHtml += `<button class="btn" data-action="edit" data-id="${student.id}" aria-label="Edit student"><i data-feather="edit-2" width="16" height="16"></i></button>`;
+                actionsHtml += `<button class="btn" data-action="delete" data-id="${student.id}" aria-label="Delete student"><i data-feather="trash-2" width="16" height="16"></i></button>`;
+                actionsHtml += `<button class="btn" data-action="tunedout" data-id="${student.id}" aria-label="Tuned Out"><i data-feather="info" width="16" height="16"></i></button>`;
+                tr.appendChild(td('Actions', actionsHtml));
+                // Tuned Out Popup
+                if (tunedOutPopupId === student.id) {
+                    const popupTd = document.createElement('td');
+                    popupTd.colSpan = 8;
+                    popupTd.style.position = 'relative';
+                    const popup = document.createElement('div');
+                    popup.className = 'tunedout-popup';
+                    popup.innerHTML = `
+                        <div class="mb-3 text-xl font-bold flex items-center gap-2">
+                            <i data-feather="user" width="16" height="16"></i> <span>${student.name}</span>
+                        </div>
+                        <div class="detail-row"><span class="detail-label">Phone:</span><span class="detail-value">${student.phone}</span></div>
+                        <div class="detail-row"><span class="detail-label">Notes:</span><span class="detail-value">${student.notes ?? ''}</span></div>
+                        <div class="detail-row"><span class="detail-label">Days Present:</span><span class="detail-value">${student.daysPresent ?? 0}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Hours:</span><span class="detail-value">${formatMinutes(student.totalMinutes ?? 0)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Last Attendance:</span><span class="detail-value">${formatDate(student.lastMarkedDate)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Session:</span><span class="detail-value">${student.session?.startedAt ? 'Active' : 'Inactive'}</span></div>
+                        <button class="close-btn" data-action="close-tunedout"><i data-feather="x" width="16" height="16"></i> Close</button>
+                        <button class="close-btn" data-action="edit-attendance" style="margin-left:10px;"><i data-feather="edit" width="16" height="16"></i> Edit Attendance</button>
+                    `;
+                    popup.setAttribute('role', 'dialog');
+                    popup.setAttribute('aria-modal', 'true');
+                    popup.setAttribute('tabindex', '-1');
+                    popupTd.appendChild(popup);
+                    tr.appendChild(popupTd);
+                }
+                studentTbody.appendChild(tr);
+            });
+            filtered.forEach(student => {
+                if (student.session?.startedAt) {
+                    startTimer(student.id);
+                } else {
+                    stopTimer(student.id);
+                }
+            });
+            feather.replace();
+        }
+        function getSessionTimer(student) {
+            if (!student.session?.startedAt) return '';
+            const started = new Date(student.session.startedAt);
+            const now = new Date();
+            const elapsed = Math.floor((now - started) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            return `${mins}:${secs.toString().padStart(2,'0')}`;
+        }
+        function startTimer(studentId) {
+            if (timerIntervals[studentId]) return;
+            timerIntervals[studentId] = setInterval(() => {
+                const student = students.find(s => s.id === studentId);
+                if (!student || !student.session?.startedAt) {
+                    stopTimer(studentId);
+                    return;
+                }
+                const timerEl = document.getElementById(`timer-${studentId}`);
+                if (timerEl) timerEl.textContent = getSessionTimer(student);
+            }, 1000);
+        }
+        function stopTimer(studentId) {
+            if (timerIntervals[studentId]) {
+                clearInterval(timerIntervals[studentId]);
+                delete timerIntervals[studentId];
+            }
+        }
+        // --- Event Handlers ---
+        studentTbody.addEventListener('click', function(e) {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'start') {
+                startSession(id);
+            } else if (action === 'end') {
+                endSession(id);
+            } else if (action === 'mark') {
+                markAttendance(id);
+            } else if (action === 'edit') {
+                openEditStudentModal(id);
+            } else if (action === 'delete') {
+                openDeleteStudentModal(id);
+            } else if (action === 'tunedout') {
+                tunedOutPopupId = id;
+                renderStudents();
+            } else if (action === 'close-tunedout') {
+                tunedOutPopupId = null;
+                renderStudents();
+            } else if (action === 'edit-attendance') {
+                openEditAttendanceModal(id);
+            }
+        });
+        addStudentBtn.addEventListener('click', () => openAddStudentModal());
+        exportCsvBtn.addEventListener('click', exportCSV);
+        importCsvBtn.addEventListener('click', () => importCsvInput.click());
+        importCsvInput.addEventListener('change', handleImportCSV);
+        searchInput.addEventListener('input', e => {
+            searchTerm = e.target.value.trim().toLowerCase();
+            renderStudents();
+        });
+        sortSelect.addEventListener('change', e => {
+            sortBy = e.target.value;
+            renderStudents();
+        });
+        addPreviousBtn.addEventListener('click', openAddPreviousModal);
+        // --- Session Logic ---
+        function startSession(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            if (student.session?.startedAt) return;
+            student.session = { startedAt: new Date().toISOString() };
+            saveStudents();
+            renderStudents();
+        }
+        function endSession(id) {
+            const student = students.find(s => s.id === id);
+            if (!student || !student.session?.startedAt) return;
+            const started = new Date(student.session.startedAt);
+            const now = new Date();
+            const elapsed = Math.floor((now - started) / 1000);
+            const mins = Math.max(1, Math.floor(elapsed / 60));
+            student.totalMinutes = (student.totalMinutes ?? 0) + mins;
+            student.session = {};
+            saveStudents();
+            renderStudents();
+        }
+        function markAttendance(id, dateOverride, minutesOverride) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            const today = dateOverride || todayISO();
+            if (student.lastMarkedDate !== today) {
+                student.daysPresent = (student.daysPresent ?? 0) + 1;
+                student.lastMarkedDate = today;
+                if (minutesOverride) {
+                    student.totalMinutes = (student.totalMinutes ?? 0) + Number(minutesOverride);
+                }
+                saveStudents();
+                renderStudents();
+            }
+        }
+        // --- Modal Logic ---
+        function openAddStudentModal() {
+            showModal({
+                title: 'Add Student',
+                fields: [
+                    {label:'Name', name:'name', type:'text', required:true},
+                    {label:'Phone', name:'phone', type:'text', required:true},
+                    {label:'Notes', name:'notes', type:'textarea', required:false}
+                ],
+                onSubmit: (data) => {
+                    students.push({
+                        id: uuidv4(),
+                        name: data.name,
+                        phone: data.phone,
+                        notes: data.notes,
+                        totalMinutes: 0,
+                        daysPresent: 0,
+                        lastMarkedDate: '',
+                        session: {}
+                    });
+                    saveStudents();
+                    renderStudents();
+                }
+            });
+        }
+        function openEditStudentModal(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            showModal({
+                title: 'Edit Student',
+                fields: [
+                    {label:'Name', name:'name', type:'text', required:true, value:student.name},
+                    {label:'Phone', name:'phone', type:'text', required:true, value:student.phone},
+                    {label:'Notes', name:'notes', type:'textarea', required:false, value:student.notes}
+                ],
+                onSubmit: (data) => {
+                    student.name = data.name;
+                    student.phone = data.phone;
+                    student.notes = data.notes;
+                    saveStudents();
+                    renderStudents();
+                }
+            });
+        }
+        function openDeleteStudentModal(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            showModal({
+                title: 'Delete Student',
+                content: `<p>Are you sure you want to delete <strong>${student.name}</strong>?</p>`,
+                actions: [
+                    {label:'Delete', onClick:() => {
+                        students = students.filter(s => s.id !== id);
+                        saveStudents();
+                        renderStudents();
+                    }},
+                    {label:'Cancel', onClick:()=>{}}
+                ]
+            });
+        }
+        // --- Add Previous Attendance Modal ---
+        function openAddPreviousModal() {
+            if (students.length === 0) {
+                alert('No students to mark attendance for.');
+                return;
+            }
+            showModal({
+                title: 'Add Previous Attendance',
+                fields: [
+                    {label:'Date', name:'date', type:'date', required:true},
+                    {label:'Student', name:'studentId', type:'select', required:true, options: students.map(s => ({value:s.id, label:s.name}))},
+                    {label:'Minutes', name:'minutes', type:'number', required:true, value:60}
+                ],
+                onSubmit: (data) => {
+                    const date = data.date;
+                    const studentId = data.studentId;
+                    const minutes = data.minutes;
+                    if (!date || !studentId || !minutes) return;
+                    markAttendance(studentId, date, minutes);
+                }
+            });
+        }
+        // --- Edit Attendance Modal ---
+        function openEditAttendanceModal(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            showModal({
+                title: 'Edit Attendance',
+                fields: [
+                    {label:'Last Attendance Date', name:'lastMarkedDate', type:'date', required:true, value:student.lastMarkedDate || todayISO()},
+                    {label:'Days Present', name:'daysPresent', type:'number', required:true, value:student.daysPresent ?? 0},
+                    {label:'Total Minutes', name:'totalMinutes', type:'number', required:true, value:student.totalMinutes ?? 0}
+                ],
+                onSubmit: (data) => {
+                    student.lastMarkedDate = data.lastMarkedDate;
+                    student.daysPresent = Number(data.daysPresent);
+                    student.totalMinutes = Number(data.totalMinutes);
+                    saveStudents();
+                    renderStudents();
+                }
+            });
+        }
+        // --- Modal Implementation ---
+        function showModal({title, fields, onSubmit, content, actions}) {
+            modalRoot.innerHTML = '';
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop';
+            backdrop.tabIndex = -1;
+            backdrop.setAttribute('role','presentation');
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.setAttribute('role','dialog');
+            modal.setAttribute('aria-modal','true');
+            modal.setAttribute('tabindex','-1');
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
+            closeBtn.innerHTML = '<i data-feather="x" width="16" height="16"></i>';
+            closeBtn.setAttribute('aria-label','Close');
+            closeBtn.addEventListener('click', closeModal);
+            modal.appendChild(closeBtn);
+            const h2 = document.createElement('h2');
+            h2.textContent = title;
+            modal.appendChild(h2);
+            if (fields) {
+                const form = document.createElement('form');
+                fields.forEach(f => {
+                    const label = document.createElement('label');
+                    label.textContent = f.label;
+                    label.setAttribute('for', f.name);
+                    form.appendChild(label);
+                    let input;
+                    if (f.type === 'textarea') {
+                        input = document.createElement('textarea');
+                        input.rows = 2;
+                    } else if (f.type === 'select') {
+                        input = document.createElement('select');
+                        (f.options||[]).forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.value;
+                            option.textContent = opt.label;
+                            input.appendChild(option);
+                        });
+                    } else {
+                        input = document.createElement('input');
+                        input.type = f.type;
+                    }
+                    input.name = f.name;
+                    input.id = f.name;
+                    input.required = !!f.required;
+                    if (f.value !== undefined) input.value = f.value;
+                    input.placeholder = f.label;
+                    form.appendChild(input);
+                });
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'modal-actions flex gap-4 mt-6 justify-end';
+                const submitBtn = document.createElement('button');
+                submitBtn.type = 'submit';
+                submitBtn.textContent = 'Save';
+                actionsDiv.appendChild(submitBtn);
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.addEventListener('click', closeModal);
+                actionsDiv.appendChild(cancelBtn);
+                form.appendChild(actionsDiv);
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const data = {};
+                    fields.forEach(f => data[f.name] = form.elements[f.name].value);
+                    closeModal();
+                    if (onSubmit) onSubmit(data);
+                });
+                modal.appendChild(form);
+                setTimeout(() => form.elements[fields[0].name].focus(), 100);
+            } else if (content) {
+                const div = document.createElement('div');
+                div.innerHTML = content;
+                modal.appendChild(div);
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'modal-actions flex gap-4 mt-6 justify-end';
+                (actions||[]).forEach(a => {
+                    const btn = document.createElement('button');
+                    btn.textContent = a.label;
+                    if (a.class) btn.className = a.class;
+                    btn.addEventListener('click', () => {
+                        closeModal();
+                        if (a.onClick) a.onClick();
+                    });
+                    actionsDiv.appendChild(btn);
+                });
+                modal.appendChild(actionsDiv);
+                setTimeout(() => closeBtn.focus(), 100);
+            }
+            backdrop.appendChild(modal);
+            modalRoot.appendChild(backdrop);
+            feather.replace();
+            function escListener(e) {
+                if (e.key === 'Escape') closeModal();
+            }
+            document.addEventListener('keydown', escListener);
+            backdrop.addEventListener('keydown', function(e){
+                if (e.key === 'Tab') {
+                    const focusables = modal.querySelectorAll('button, [tabindex], input, textarea, select');
+                    const first = focusables[0], last = focusables[focusables.length-1];
+                    if (e.shiftKey && document.activeElement === first) {
+                        last.focus();
+                        e.preventDefault();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        first.focus();
+                        e.preventDefault();
+                    }
+                }
+            });
+            function closeModal() {
+                modalRoot.innerHTML = '';
+                document.removeEventListener('keydown', escListener);
+            }
+            backdrop.addEventListener('mousedown', function(e){
+                if (e.target === backdrop) closeModal();
+            });
+        }
+        // --- CSV Export/Import ---
+        function exportCSV() {
+            const csv = toCSV(students, CSV_HEADER);
+            const blob = new Blob([csv], {type:'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'attendance.csv';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        function handleImportCSV(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const text = ev.target.result;
+                let imported;
+                try {
+                    imported = parseCSV(text);
+                } catch {
+                    alert('Invalid CSV format.');
+                    return;
+                }
+                showModal({
+                    title: 'Import CSV',
+                    content: `<p>Import <strong>${imported.length}</strong> students.<br>Choose:</p>`,
+                    actions: [
+                        {label:'Replace', onClick:() => {
+                            students = imported.map(row => ({
+                                ...row,
+                                totalMinutes: Number(row.totalMinutes)||0,
+                                daysPresent: Number(row.daysPresent)||0,
+                                session: {}
+                            }));
+                            saveStudents();
+                            renderStudents();
+                        }},
+                        {label:'Merge', onClick:() => {
+                            imported.forEach(row => {
+                                if (!students.some(s => s.id === row.id)) {
+                                    students.push({
+                                        ...row,
+                                        totalMinutes: Number(row.totalMinutes)||0,
+                                        daysPresent: Number(row.daysPresent)||0,
+                                        session: {}
+                                    });
+                                }
+                            });
+                            saveStudents();
+                            renderStudents();
+                        }},
+                        {label:'Cancel', onClick:()=>{}}
+                    ]
+                });
+            };
+            reader.readAsText(file);
+            importCsvInput.value = '';
+        }
+        // --- Initial Load ---
+        renderDate();
+        loadStudents();
+        renderStudents();
+        function handleResize() {
+            if (window.innerWidth < 700) {
+                document.querySelector('.student-table thead').style.display = 'none';
+            } else {
+                document.querySelector('.student-table thead').style.display = '';
+            }
+        }
+        window.addEventListener('resize', handleResize);
+        handleResize();
+        modalRoot.addEventListener('keydown', function(e){
+            if (e.key === 'Escape') {
+                modalRoot.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
